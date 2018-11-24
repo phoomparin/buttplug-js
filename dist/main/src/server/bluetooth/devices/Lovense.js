@@ -124,7 +124,8 @@ Lovense.DeviceInfo = (() => {
     // Start with the two non-standard UUIDs, which come from the original
     // versions of the Max/Nora toys.
     const uuids = ["0000fff0-0000-1000-8000-00805f9b34fb",
-        "6e400001-b5a3-f393-e0a9-e50e24dcca9e"];
+        "6e400001-b5a3-f393-e0a9-e50e24dcca9e",
+        "4f300001-0023-4bd4-bbd5-a6920e4c5653"];
     // Future-proofing for possible Lovense UUIDs, based on the pattern of the
     // current firmware.
     for (let i = 0; i < 16; ++i) {
