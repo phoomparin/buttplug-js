@@ -10,6 +10,7 @@ import { ButtplugClient } from "../src/index";
 import { TestDeviceManager } from "../src/devtools";
 import { SetupTestSuite } from "./utils";
 import { ButtplugLogger, ButtplugLogLevel } from "../src/core/Logging";
+import { ButtplugDeviceException } from "../src/core/Exceptions";
 
 SetupTestSuite();
 
@@ -27,11 +28,11 @@ class TestOldClient extends ButtplugClient {
   protected InitializeConnection = async (): Promise<boolean> => {
     const msg = await this.SendMessage(new Messages.RequestServerInfo(this._clientName, 0));
     switch (msg.getType()) {
-    case "ServerInfo": {
+    case Messages.ServerInfo: {
       // TODO: maybe store server name, do something with message template version?
       return true;
     }
-    case "Error": {
+    case Messages.Error: {
       this._connector!.Disconnect();
     }
     }
@@ -44,6 +45,10 @@ describe("Server Tests", async () => {
   beforeEach(async () => {
     bpServer = new ButtplugServer("Test Server", 0);
     bpServer.AddDeviceManager(new TestDeviceManager());
+  });
+
+  it("Should throw connection error if message sent without connecting", async () => {
+    await expect(bpServer.SendMessage(new Messages.SingleMotorVibrateCmd(50, 0))).rejects.toBeInstanceOf(Error);
   });
 
   it("Should downgrade messages", async () => {
@@ -76,20 +81,9 @@ describe("Server Tests", async () => {
   it("Should clear all device managers when ClearDeviceManagers called", async () => {
     const bpConnector = new ButtplugEmbeddedServerConnector();
     bpConnector.Server = bpServer;
+    bpServer.ClearDeviceManagers();
     const client = new ButtplugClient();
     await client.Connect(bpConnector);
-    let res;
-    let rej;
-    const p = new Promise((resolve, reject) => { res = resolve; rej = reject; });
-    client.addListener("scanningfinished", (aMsgs) => {
-      try {
-        expect(client.Devices.length).toEqual(0);
-        res();
-      } catch (e) {
-        rej(e);
-      }
-    });
-    await client.StartScanning();
-    return p;
+    await expect(client.StartScanning()).rejects.toBeInstanceOf(ButtplugDeviceException);
   });
 });
