@@ -18,23 +18,12 @@ class BPTestClient extends index_1.ButtplugClient {
     get PingTimer() {
         return this._pingTimer;
     }
-    SendCheckedMessage(aMsg) {
-        return __awaiter(this, void 0, void 0, function* () {
-            this.CheckConnector();
-            // This will throw if our message is invalid
-            index_1.CheckMessage(aMsg);
-            return yield this.SendUncheckedMessage(aMsg);
+    SendMessage(aMsg) {
+        const _super = Object.create(null, {
+            SendMessage: { get: () => super.SendMessage }
         });
-    }
-    SendUncheckedMessage(aMsg) {
         return __awaiter(this, void 0, void 0, function* () {
-            let r;
-            aMsg.Id = this._counter;
-            const msgPromise = new Promise((resolve) => { r = resolve; });
-            this._waitingMsgs.set(this._counter, r);
-            this._counter += 1;
-            this._connector.Send(aMsg);
-            return yield msgPromise;
+            return _super.SendMessage.call(this, aMsg);
         });
     }
 }

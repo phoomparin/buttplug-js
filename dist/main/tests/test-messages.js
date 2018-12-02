@@ -29,23 +29,23 @@ describe("Message", () => {
     });
     it("Throws an error when trying to parse a message that breaks schema", () => {
         const jsonStr = '[{"DeviceAdded":{"Id":1,"DeviceIndex":0,"DeviceName":"Test","DeviceMessages":["Ok","Ping"]}}]';
-        expect(MessageUtils_1.FromJSON(jsonStr)[0].constructor.name).toEqual("Error");
+        expect(() => MessageUtils_1.FromJSON(jsonStr)).toThrow();
     });
     it("Handles KiirooCmd messages correctly", () => {
         const jsonStr = '[{"KiirooCmd":{"Id":1,"DeviceIndex":0,"Command":"3"}}]';
         expect(MessageUtils_1.FromJSON(jsonStr)[0].constructor.name).toEqual("KiirooCmd");
         const msg = MessageUtils_1.FromJSON(jsonStr)[0];
         expect(msg.Command).toEqual("3");
-        expect(msg.GetPosition()).toEqual(3);
+        expect(msg.Position).toEqual(3);
         const msg2 = new Messages.KiirooCmd();
         msg2.Id = 2;
         msg2.DeviceIndex = 3;
         msg2.Command = "foo";
         expect(msg2.Command).toEqual("foo");
-        expect(msg2.GetPosition()).toEqual(0);
-        msg2.SetPosition(4);
+        expect(msg2.Position).toEqual(0);
+        msg2.Position = 4;
         expect(msg2.Command).toEqual("4");
-        expect(msg2.GetPosition()).toEqual(4);
+        expect(msg2.Position).toEqual(4);
         expect(msg2.toJSON()).toEqual('{"KiirooCmd":{"Id":2,"DeviceIndex":3,"Command":"4"}}');
     });
     it("Handles Device Commands with Subcommand arrays correctly", () => {

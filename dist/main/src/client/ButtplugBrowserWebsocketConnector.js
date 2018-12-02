@@ -10,10 +10,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const events_1 = require("events");
 const MessageUtils_1 = require("../core/MessageUtils");
+const ButtplugMessageSorter_1 = require("./ButtplugMessageSorter");
 class ButtplugBrowserWebsocketConnector extends events_1.EventEmitter {
     constructor(_url) {
         super();
         this._url = _url;
+        this._sorter = new ButtplugMessageSorter_1.ButtplugMessageSorter();
         this.Connect = () => __awaiter(this, void 0, void 0, function* () {
             const ws = new WebSocket(this._url);
             let res;
@@ -41,16 +43,19 @@ class ButtplugBrowserWebsocketConnector extends events_1.EventEmitter {
             this._ws = undefined;
             this.emit("disconnect");
         };
-        this.Send = (aMsg) => {
+        this.Send = (aMsg) => __awaiter(this, void 0, void 0, function* () {
             if (!this.Connected) {
                 throw new Error("ButtplugClient not connected");
             }
+            const p = this._sorter.PrepareOutgoingMessage(aMsg);
             this._ws.send("[" + aMsg.toJSON() + "]");
-        };
+            return yield p;
+        });
         this.ParseIncomingMessage = (aEvent) => {
             if (typeof (aEvent.data) === "string") {
                 const msgs = MessageUtils_1.FromJSON(aEvent.data);
-                this.emit("message", msgs);
+                const emitMsgs = this._sorter.ParseIncomingMessages(msgs);
+                this.emit("message", emitMsgs);
             }
             else if (aEvent.data instanceof Blob) {
                 const reader = new FileReader();
@@ -64,7 +69,8 @@ class ButtplugBrowserWebsocketConnector extends events_1.EventEmitter {
     }
     OnReaderLoad(aEvent) {
         const msgs = MessageUtils_1.FromJSON(aEvent.target.result);
-        this.emit("message", msgs);
+        const emitMsgs = this._sorter.ParseIncomingMessages(msgs);
+        this.emit("message", emitMsgs);
     }
 }
 exports.ButtplugBrowserWebsocketConnector = ButtplugBrowserWebsocketConnector;

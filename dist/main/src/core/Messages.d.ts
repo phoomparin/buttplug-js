@@ -1,4 +1,7 @@
 import "reflect-metadata";
+export declare const SYSTEM_MESSAGE_ID = 0;
+export declare const DEFAULT_MESSAGE_ID = 1;
+export declare const MAX_ID = 4294967295;
 export declare abstract class ButtplugMessage {
     Id: number;
     constructor(Id: number);
@@ -13,12 +16,12 @@ export declare abstract class ButtplugMessage {
      * and DeviceAddedVersion1), we will need to override this to set the message
      * name.
      */
-    readonly Type: string;
+    readonly Type: Function;
     /***
      * [DEPRECATED] Function version of the this.Type getter
      *
      */
-    getType(): string;
+    getType(): Function;
     toJSON(): string;
     toProtocolFormat(): object;
 }
@@ -33,12 +36,12 @@ export declare abstract class ButtplugSystemMessage extends ButtplugMessage {
 }
 export declare class Ok extends ButtplugSystemMessage {
     Id: number;
-    constructor(Id: number);
+    constructor(Id?: number);
     readonly SchemaVersion: number;
 }
 export declare class Ping extends ButtplugMessage {
     Id: number;
-    constructor(Id: number);
+    constructor(Id?: number);
     readonly SchemaVersion: number;
 }
 export declare class Test extends ButtplugMessage {
@@ -76,7 +79,7 @@ export declare class DeviceListVersion0 extends ButtplugSystemMessage {
     Devices: DeviceInfo[];
     Id: number;
     constructor(Devices: DeviceInfo[], Id: number);
-    readonly Type: string;
+    readonly Type: Function;
     readonly SchemaVersion: number;
 }
 export declare class DeviceInfoWithSpecifications {
@@ -85,11 +88,10 @@ export declare class DeviceInfoWithSpecifications {
     DeviceMessages: object;
     constructor(DeviceIndex: number, DeviceName: string, DeviceMessages: object);
 }
-export declare class DeviceListVersion1 extends ButtplugSystemMessage {
+export declare class DeviceList extends ButtplugSystemMessage {
     Devices: DeviceInfoWithSpecifications[];
     Id: number;
     constructor(Devices: DeviceInfoWithSpecifications[], Id: number);
-    readonly Type: string;
     DowngradeMessage(): ButtplugMessage;
     readonly SchemaVersion: number;
 }
@@ -98,15 +100,14 @@ export declare class DeviceAddedVersion0 extends ButtplugSystemMessage {
     DeviceName: string;
     DeviceMessages: string[];
     constructor(DeviceIndex: number, DeviceName: string, DeviceMessages: string[]);
-    readonly Type: string;
+    readonly Type: Function;
     readonly SchemaVersion: number;
 }
-export declare class DeviceAddedVersion1 extends ButtplugSystemMessage {
+export declare class DeviceAdded extends ButtplugSystemMessage {
     DeviceIndex: number;
     DeviceName: string;
     DeviceMessages: object;
     constructor(DeviceIndex: number, DeviceName: string, DeviceMessages: object);
-    readonly Type: string;
     readonly SchemaVersion: number;
     DowngradeMessage(): ButtplugMessage;
 }
@@ -173,12 +174,11 @@ export declare class FleshlightLaunchFW12Cmd extends ButtplugDeviceMessage {
     readonly SchemaVersion: number;
 }
 export declare class KiirooCmd extends ButtplugDeviceMessage {
-    Command: string;
     DeviceIndex: number;
     Id: number;
-    constructor(Command?: string, DeviceIndex?: number, Id?: number);
-    SetPosition(aPos: number): void;
-    GetPosition(): number;
+    Command: string;
+    constructor(aCommand?: number, DeviceIndex?: number, Id?: number);
+    Position: number;
     readonly SchemaVersion: number;
 }
 export declare class SingleMotorVibrateCmd extends ButtplugDeviceMessage {
@@ -214,8 +214,11 @@ export declare class VorzeA10CycloneCmd extends ButtplugDeviceMessage {
     constructor(Speed: number, Clockwise: boolean, DeviceIndex?: number, Id?: number);
     readonly SchemaVersion: number;
 }
-export declare class SpeedSubcommand {
+export declare class GenericMessageSubcommand {
     Index: number;
+    protected constructor(Index: number);
+}
+export declare class SpeedSubcommand extends GenericMessageSubcommand {
     Speed: number;
     constructor(Index: number, Speed: number);
 }
@@ -223,24 +226,25 @@ export declare class VibrateCmd extends ButtplugDeviceMessage {
     Speeds: SpeedSubcommand[];
     DeviceIndex: number;
     Id: number;
-    constructor(Speeds: SpeedSubcommand[], DeviceIndex?: number, Id?: number);
     readonly SchemaVersion: number;
+    static Create(aDeviceIndex: number, aSpeeds: number[]): VibrateCmd;
+    constructor(Speeds: SpeedSubcommand[], DeviceIndex?: number, Id?: number);
 }
-export declare class RotateSubcommand {
-    Index: number;
+export declare class RotateSubcommand extends GenericMessageSubcommand {
     Speed: number;
     Clockwise: boolean;
+    static Create(aDeviceIndex: number, aSpeeds: number[]): VibrateCmd;
     constructor(Index: number, Speed: number, Clockwise: boolean);
 }
 export declare class RotateCmd extends ButtplugDeviceMessage {
     Rotations: RotateSubcommand[];
     DeviceIndex: number;
     Id: number;
-    constructor(Rotations: RotateSubcommand[], DeviceIndex?: number, Id?: number);
     readonly SchemaVersion: number;
+    static Create(aDeviceIndex: number, aCommands: Array<[number, boolean]>): RotateCmd;
+    constructor(Rotations: RotateSubcommand[], DeviceIndex?: number, Id?: number);
 }
-export declare class VectorSubcommand {
-    Index: number;
+export declare class VectorSubcommand extends GenericMessageSubcommand {
     Position: number;
     Duration: number;
     constructor(Index: number, Position: number, Duration: number);
@@ -249,12 +253,11 @@ export declare class LinearCmd extends ButtplugDeviceMessage {
     Vectors: VectorSubcommand[];
     DeviceIndex: number;
     Id: number;
-    constructor(Vectors: VectorSubcommand[], DeviceIndex?: number, Id?: number);
     readonly SchemaVersion: number;
+    static Create(aDeviceIndex: number, aCommands: Array<[number, number]>): LinearCmd;
+    constructor(Vectors: VectorSubcommand[], DeviceIndex?: number, Id?: number);
 }
 export declare class MessageAttributes {
     FeatureCount: number;
     constructor(FeatureCount: number);
 }
-export { DeviceListVersion1 as DeviceList };
-export { DeviceAddedVersion1 as DeviceAdded };

@@ -12,12 +12,15 @@ export declare class ButtplugServer extends EventEmitter {
     private _receivedRequestServerInfo;
     private _logger;
     private _outgoingLogLevel;
+    private _connected;
     constructor(_serverName?: string, _maxPingTime?: number);
     AddDeviceManager: (aManager: IDeviceSubtypeManager) => void;
     readonly DeviceManagers: IDeviceSubtypeManager[];
     ClearDeviceManagers: () => void;
+    Disconnect: () => void;
+    CheckConnection: () => void;
     SendMessage: (aMessage: Messages.ButtplugMessage) => Promise<Messages.ButtplugMessage>;
     Shutdown: () => Promise<void>;
     private OnLogMessage;
-    private OnOutgoingMessage;
+    private SendOutgoingMessage;
 }

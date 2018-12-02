@@ -12,6 +12,7 @@ const index_1 = require("../src/index");
 const index_2 = require("../src/devtools/index");
 const Messages = require("../src/core/Messages");
 const utils_1 = require("./utils");
+const Exceptions_1 = require("../src/core/Exceptions");
 utils_1.SetupTestSuite();
 describe("Client Tests", () => __awaiter(this, void 0, void 0, function* () {
     let p;
@@ -29,9 +30,9 @@ describe("Client Tests", () => __awaiter(this, void 0, void 0, function* () {
     }
     it("Should return a test message.", () => __awaiter(this, void 0, void 0, function* () {
         const bp = yield SetupServer();
-        yield expect(bp.SendCheckedMessage(new Messages.Test("Test")))
+        yield expect(bp.SendMessage(new Messages.Test("Test")))
             .resolves
-            .toEqual(new Messages.Test("Test", 3));
+            .toEqual(new Messages.Test("Test"));
     }));
     it("Should emit a log message on requestlog (testing basic event emitters)", () => __awaiter(this, void 0, void 0, function* () {
         const bp = yield SetupServer();
@@ -104,7 +105,9 @@ describe("Client Tests", () => __awaiter(this, void 0, void 0, function* () {
             catch (e) {
                 rej();
             }
-            expect(yield bp.SendDeviceMessage(bp.Devices[0], new Messages.KiirooCmd("2"))).toThrow();
+            yield expect(bp.SendDeviceMessage(bp.Devices[0], new Messages.KiirooCmd(2)))
+                .rejects
+                .toBeInstanceOf(Exceptions_1.ButtplugDeviceException);
             res();
         }));
         yield bp.StartScanning();
@@ -114,10 +117,10 @@ describe("Client Tests", () => __awaiter(this, void 0, void 0, function* () {
         const bp = (yield utils_1.SetupTestServer()).Client;
         bp.on("scanningfinished", (x) => __awaiter(this, void 0, void 0, function* () {
             expect(bp.Devices.length).toBeGreaterThan(0);
-            process.nextTick(() => __awaiter(this, void 0, void 0, function* () {
-                expect(yield bp.SendDeviceMessage(bp.Devices[0], new Messages.SingleMotorVibrateCmd(50))).toThrow();
-                res();
-            }));
+            yield expect(bp.SendDeviceMessage(bp.Devices[0], new Messages.SingleMotorVibrateCmd(50)))
+                .rejects
+                .toBeInstanceOf(Exceptions_1.ButtplugMessageException);
+            res();
         }));
         yield bp.StartScanning();
         return p;
@@ -141,12 +144,8 @@ describe("Client Tests", () => __awaiter(this, void 0, void 0, function* () {
     }));
     it("Should get error on scanning when no device managers available.", () => __awaiter(this, void 0, void 0, function* () {
         const bplocal = new index_1.ButtplugClient("Test Client");
-        bplocal.addListener("disconnect", () => { res(); });
         yield bplocal.ConnectLocal();
-        yield expect(bplocal.StartScanning())
-            .rejects
-            .toHaveProperty("ErrorCode", Messages.ErrorClass.ERROR_DEVICE);
-        bplocal.Disconnect();
+        yield expect(bplocal.StartScanning()).rejects.toBeInstanceOf(Exceptions_1.ButtplugDeviceException);
     }));
 }));
 //# sourceMappingURL=test-client.js.map

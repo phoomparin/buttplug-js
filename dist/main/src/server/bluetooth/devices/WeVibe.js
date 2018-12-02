@@ -11,13 +11,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const BluetoothDeviceInfo_1 = require("../BluetoothDeviceInfo");
 const ButtplugBluetoothDevice_1 = require("../ButtplugBluetoothDevice");
 const Messages = require("../../../core/Messages");
+const Exceptions_1 = require("../../../core/Exceptions");
 class WeVibe extends ButtplugBluetoothDevice_1.ButtplugBluetoothDevice {
     constructor(aDeviceImpl) {
         super(`WeVibe ${aDeviceImpl.Name}`, aDeviceImpl);
         this.HandleVibrateCmd = (aMsg) => __awaiter(this, void 0, void 0, function* () {
             if (aMsg.Speeds.length !== 1) {
-                return new Messages.Error(`WeVibe devices require VibrateCmd to have 1 speed command, ` +
-                    `${aMsg.Speeds.length} sent.`, Messages.ErrorClass.ERROR_DEVICE, aMsg.Id);
+                throw new Exceptions_1.ButtplugDeviceException(`WeVibe devices require VibrateCmd to have 1 speed command, ` +
+                    `${aMsg.Speeds.length} sent.`, aMsg.Id);
             }
             return yield this.HandleSingleMotorVibrateCmd(new Messages.SingleMotorVibrateCmd(aMsg.Speeds[0].Speed, aMsg.DeviceIndex, aMsg.Id));
         });
@@ -30,9 +31,9 @@ class WeVibe extends ButtplugBluetoothDevice_1.ButtplugBluetoothDevice {
             yield this._deviceImpl.WriteValue("tx", data);
             return new Messages.Ok(aMsg.Id);
         });
-        this.MsgFuncs.set(Messages.StopDeviceCmd.name, this.HandleStopDeviceCmd);
-        this.MsgFuncs.set(Messages.SingleMotorVibrateCmd.name, this.HandleSingleMotorVibrateCmd);
-        this.MsgFuncs.set(Messages.VibrateCmd.name, this.HandleVibrateCmd);
+        this.MsgFuncs.set(Messages.StopDeviceCmd, this.HandleStopDeviceCmd);
+        this.MsgFuncs.set(Messages.SingleMotorVibrateCmd, this.HandleSingleMotorVibrateCmd);
+        this.MsgFuncs.set(Messages.VibrateCmd, this.HandleVibrateCmd);
     }
     static CreateInstance(aDeviceImpl) {
         return __awaiter(this, void 0, void 0, function* () {

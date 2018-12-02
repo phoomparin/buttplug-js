@@ -1,6 +1,5 @@
 /// <reference types="node" />
 import { EventEmitter } from "events";
-import * as Messages from "./Messages";
 /**
  * Enumeration of log levels for LogMessage message types. Log levels must match
  * order and name specified in LogMessage portion of the Buttplug protocol spec.
@@ -82,12 +81,6 @@ export declare class ButtplugLogger extends EventEmitter {
     * Get the global maximum log level
     */
     MaximumEventLogLevel: ButtplugLogLevel;
-    /**
-     * Log a message, then create a Error buttplug message with the log message.
-     * Used when an operation has errored out and status needs to be both logged
-     * and returned to the client as an Error Message type.
-     */
-    LogAndError(aMsg: string, aErrorClass: Messages.ErrorClass, aMsgId: number): Messages.ButtplugMessage;
     /**
      * Log new message at Fatal level.
      */

@@ -2,13 +2,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const class_transformer_1 = require("class-transformer");
+const Exceptions_1 = require("./Exceptions");
 require("reflect-metadata");
+exports.SYSTEM_MESSAGE_ID = 0;
+exports.DEFAULT_MESSAGE_ID = 1;
+exports.MAX_ID = 4294967295;
 class ButtplugMessage {
     constructor(Id) {
         this.Id = Id;
     }
     DowngradeMessage() {
-        return new Error("Message version downgrade required, but not defined for this message type.", ErrorClass.ERROR_MSG, this.Id);
+        throw new Exceptions_1.ButtplugMessageException("Message version downgrade required, but not defined for this message type.", this.Id);
     }
     /***
      * Returns the message type name
@@ -19,13 +23,15 @@ class ButtplugMessage {
      * and DeviceAddedVersion1), we will need to override this to set the message
      * name.
      */
+    // tslint:disable-next-line:ban-types
     get Type() {
-        return this.constructor.name;
+        return this.constructor;
     }
     /***
      * [DEPRECATED] Function version of the this.Type getter
      *
      */
+    // tslint:disable-next-line:ban-types
     getType() {
         return this.Type;
     }
@@ -34,7 +40,7 @@ class ButtplugMessage {
     }
     toProtocolFormat() {
         const jsonObj = {};
-        jsonObj[this.Type] = class_transformer_1.classToPlain(this);
+        jsonObj[this.Type.name] = class_transformer_1.classToPlain(this);
         return jsonObj;
     }
 }
@@ -48,14 +54,14 @@ class ButtplugDeviceMessage extends ButtplugMessage {
 }
 exports.ButtplugDeviceMessage = ButtplugDeviceMessage;
 class ButtplugSystemMessage extends ButtplugMessage {
-    constructor(Id = 0) {
+    constructor(Id = exports.SYSTEM_MESSAGE_ID) {
         super(Id);
         this.Id = Id;
     }
 }
 exports.ButtplugSystemMessage = ButtplugSystemMessage;
 class Ok extends ButtplugSystemMessage {
-    constructor(Id) {
+    constructor(Id = exports.DEFAULT_MESSAGE_ID) {
         super(Id);
         this.Id = Id;
     }
@@ -63,7 +69,7 @@ class Ok extends ButtplugSystemMessage {
 }
 exports.Ok = Ok;
 class Ping extends ButtplugMessage {
-    constructor(Id) {
+    constructor(Id = exports.DEFAULT_MESSAGE_ID) {
         super(Id);
         this.Id = Id;
     }
@@ -71,7 +77,7 @@ class Ping extends ButtplugMessage {
 }
 exports.Ping = Ping;
 class Test extends ButtplugMessage {
-    constructor(TestString, Id = 1) {
+    constructor(TestString, Id = exports.DEFAULT_MESSAGE_ID) {
         super(Id);
         this.TestString = TestString;
         this.Id = Id;
@@ -88,7 +94,7 @@ var ErrorClass;
     ErrorClass[ErrorClass["ERROR_DEVICE"] = 4] = "ERROR_DEVICE";
 })(ErrorClass = exports.ErrorClass || (exports.ErrorClass = {}));
 class Error extends ButtplugSystemMessage {
-    constructor(ErrorMessage, ErrorCode = ErrorClass.ERROR_UNKNOWN, Id = 1) {
+    constructor(ErrorMessage, ErrorCode = ErrorClass.ERROR_UNKNOWN, Id = exports.DEFAULT_MESSAGE_ID) {
         super(Id);
         this.ErrorMessage = ErrorMessage;
         this.ErrorCode = ErrorCode;
@@ -116,8 +122,9 @@ class DeviceListVersion0 extends ButtplugSystemMessage {
         this.Devices = Devices;
         this.Id = Id;
     }
+    // tslint:disable-next-line:ban-types
     get Type() {
-        return "DeviceList";
+        return DeviceList.constructor;
     }
     get SchemaVersion() { return 0; }
 }
@@ -130,14 +137,11 @@ class DeviceInfoWithSpecifications {
     }
 }
 exports.DeviceInfoWithSpecifications = DeviceInfoWithSpecifications;
-class DeviceListVersion1 extends ButtplugSystemMessage {
+class DeviceList extends ButtplugSystemMessage {
     constructor(Devices, Id) {
         super();
         this.Devices = Devices;
         this.Id = Id;
-    }
-    get Type() {
-        return "DeviceList";
     }
     DowngradeMessage() {
         // This is going to look mostly the same, we just need to reduce our devices
@@ -150,8 +154,7 @@ class DeviceListVersion1 extends ButtplugSystemMessage {
     }
     get SchemaVersion() { return 1; }
 }
-exports.DeviceListVersion1 = DeviceListVersion1;
-exports.DeviceList = DeviceListVersion1;
+exports.DeviceList = DeviceList;
 class DeviceAddedVersion0 extends ButtplugSystemMessage {
     constructor(DeviceIndex, DeviceName, DeviceMessages) {
         super();
@@ -159,21 +162,22 @@ class DeviceAddedVersion0 extends ButtplugSystemMessage {
         this.DeviceName = DeviceName;
         this.DeviceMessages = DeviceMessages;
     }
+    // This is used to fool our type checkers into thinking we're the canonical
+    // version of the message. Gross, but necessary unless we want to use strings
+    // (which we don't).
+    // tslint:disable-next-line:ban-types
     get Type() {
-        return "DeviceAdded";
+        return DeviceAdded.constructor;
     }
     get SchemaVersion() { return 0; }
 }
 exports.DeviceAddedVersion0 = DeviceAddedVersion0;
-class DeviceAddedVersion1 extends ButtplugSystemMessage {
+class DeviceAdded extends ButtplugSystemMessage {
     constructor(DeviceIndex, DeviceName, DeviceMessages) {
         super();
         this.DeviceIndex = DeviceIndex;
         this.DeviceName = DeviceName;
         this.DeviceMessages = DeviceMessages;
-    }
-    get Type() {
-        return "DeviceAdded";
     }
     get SchemaVersion() { return 1; }
     DowngradeMessage() {
@@ -182,8 +186,7 @@ class DeviceAddedVersion1 extends ButtplugSystemMessage {
         return new DeviceAddedVersion0(this.DeviceIndex, this.DeviceName, Object.keys(this.DeviceMessages));
     }
 }
-exports.DeviceAddedVersion1 = DeviceAddedVersion1;
-exports.DeviceAdded = DeviceAddedVersion1;
+exports.DeviceAdded = DeviceAdded;
 class DeviceRemoved extends ButtplugSystemMessage {
     constructor(DeviceIndex) {
         super();
@@ -193,7 +196,7 @@ class DeviceRemoved extends ButtplugSystemMessage {
 }
 exports.DeviceRemoved = DeviceRemoved;
 class RequestDeviceList extends ButtplugMessage {
-    constructor(Id = 1) {
+    constructor(Id = exports.DEFAULT_MESSAGE_ID) {
         super(Id);
         this.Id = Id;
     }
@@ -201,7 +204,7 @@ class RequestDeviceList extends ButtplugMessage {
 }
 exports.RequestDeviceList = RequestDeviceList;
 class StartScanning extends ButtplugMessage {
-    constructor(Id = 1) {
+    constructor(Id = exports.DEFAULT_MESSAGE_ID) {
         super(Id);
         this.Id = Id;
     }
@@ -209,7 +212,7 @@ class StartScanning extends ButtplugMessage {
 }
 exports.StartScanning = StartScanning;
 class StopScanning extends ButtplugMessage {
-    constructor(Id = 1) {
+    constructor(Id = exports.DEFAULT_MESSAGE_ID) {
         super(Id);
         this.Id = Id;
     }
@@ -224,7 +227,7 @@ class ScanningFinished extends ButtplugSystemMessage {
 }
 exports.ScanningFinished = ScanningFinished;
 class RequestLog extends ButtplugMessage {
-    constructor(LogLevel, Id = 1) {
+    constructor(LogLevel, Id = exports.DEFAULT_MESSAGE_ID) {
         super(Id);
         this.LogLevel = LogLevel;
         this.Id = Id;
@@ -242,7 +245,7 @@ class Log extends ButtplugSystemMessage {
 }
 exports.Log = Log;
 class RequestServerInfo extends ButtplugMessage {
-    constructor(ClientName, MessageVersion = 0, Id = 1) {
+    constructor(ClientName, MessageVersion = 0, Id = exports.DEFAULT_MESSAGE_ID) {
         super(Id);
         this.ClientName = ClientName;
         this.MessageVersion = MessageVersion;
@@ -252,7 +255,7 @@ class RequestServerInfo extends ButtplugMessage {
 }
 exports.RequestServerInfo = RequestServerInfo;
 class ServerInfo extends ButtplugSystemMessage {
-    constructor(MajorVersion, MinorVersion, BuildVersion, MessageVersion, MaxPingTime, ServerName, Id = 1) {
+    constructor(MajorVersion, MinorVersion, BuildVersion, MessageVersion, MaxPingTime, ServerName, Id = exports.DEFAULT_MESSAGE_ID) {
         super();
         this.MajorVersion = MajorVersion;
         this.MinorVersion = MinorVersion;
@@ -266,7 +269,7 @@ class ServerInfo extends ButtplugSystemMessage {
 }
 exports.ServerInfo = ServerInfo;
 class FleshlightLaunchFW12Cmd extends ButtplugDeviceMessage {
-    constructor(Speed, Position, DeviceIndex = -1, Id = 1) {
+    constructor(Speed, Position, DeviceIndex = -1, Id = exports.DEFAULT_MESSAGE_ID) {
         super(DeviceIndex, Id);
         this.Speed = Speed;
         this.Position = Position;
@@ -277,13 +280,14 @@ class FleshlightLaunchFW12Cmd extends ButtplugDeviceMessage {
 }
 exports.FleshlightLaunchFW12Cmd = FleshlightLaunchFW12Cmd;
 class KiirooCmd extends ButtplugDeviceMessage {
-    constructor(Command = "0", DeviceIndex = -1, Id = 1) {
+    constructor(aCommand = 0, DeviceIndex = -1, Id = exports.DEFAULT_MESSAGE_ID) {
         super(DeviceIndex, Id);
-        this.Command = Command;
         this.DeviceIndex = DeviceIndex;
         this.Id = Id;
+        this.Command = "0";
+        this.Command = String(aCommand);
     }
-    SetPosition(aPos) {
+    set Position(aPos) {
         if (aPos >= 0 && aPos <= 4) {
             this.Command = String(Math.round(aPos));
         }
@@ -291,7 +295,7 @@ class KiirooCmd extends ButtplugDeviceMessage {
             this.Command = "0";
         }
     }
-    GetPosition() {
+    get Position() {
         const pos = Number(this.Command) ? Number(this.Command) : 0;
         if (pos < 0 || pos > 4) {
             return 0;
@@ -304,7 +308,7 @@ class KiirooCmd extends ButtplugDeviceMessage {
 }
 exports.KiirooCmd = KiirooCmd;
 class SingleMotorVibrateCmd extends ButtplugDeviceMessage {
-    constructor(Speed, DeviceIndex = -1, Id = 1) {
+    constructor(Speed, DeviceIndex = -1, Id = exports.DEFAULT_MESSAGE_ID) {
         super(DeviceIndex, Id);
         this.Speed = Speed;
         this.DeviceIndex = DeviceIndex;
@@ -314,7 +318,7 @@ class SingleMotorVibrateCmd extends ButtplugDeviceMessage {
 }
 exports.SingleMotorVibrateCmd = SingleMotorVibrateCmd;
 class StopDeviceCmd extends ButtplugDeviceMessage {
-    constructor(DeviceIndex = -1, Id = 1) {
+    constructor(DeviceIndex = -1, Id = exports.DEFAULT_MESSAGE_ID) {
         super(DeviceIndex, Id);
         this.DeviceIndex = DeviceIndex;
         this.Id = Id;
@@ -323,7 +327,7 @@ class StopDeviceCmd extends ButtplugDeviceMessage {
 }
 exports.StopDeviceCmd = StopDeviceCmd;
 class StopAllDevices extends ButtplugMessage {
-    constructor(Id = 1) {
+    constructor(Id = exports.DEFAULT_MESSAGE_ID) {
         super(Id);
         this.Id = Id;
     }
@@ -331,7 +335,7 @@ class StopAllDevices extends ButtplugMessage {
 }
 exports.StopAllDevices = StopAllDevices;
 class LovenseCmd extends ButtplugDeviceMessage {
-    constructor(Command, DeviceIndex = -1, Id = 1) {
+    constructor(Command, DeviceIndex = -1, Id = exports.DEFAULT_MESSAGE_ID) {
         super(DeviceIndex, Id);
         this.Command = Command;
         this.DeviceIndex = DeviceIndex;
@@ -341,7 +345,7 @@ class LovenseCmd extends ButtplugDeviceMessage {
 }
 exports.LovenseCmd = LovenseCmd;
 class VorzeA10CycloneCmd extends ButtplugDeviceMessage {
-    constructor(Speed, Clockwise, DeviceIndex = -1, Id = 1) {
+    constructor(Speed, Clockwise, DeviceIndex = -1, Id = exports.DEFAULT_MESSAGE_ID) {
         super(DeviceIndex, Id);
         this.Speed = Speed;
         this.Clockwise = Clockwise;
@@ -351,57 +355,99 @@ class VorzeA10CycloneCmd extends ButtplugDeviceMessage {
     get SchemaVersion() { return 0; }
 }
 exports.VorzeA10CycloneCmd = VorzeA10CycloneCmd;
-class SpeedSubcommand {
-    constructor(Index, Speed) {
+class GenericMessageSubcommand {
+    constructor(Index) {
         this.Index = Index;
+    }
+}
+exports.GenericMessageSubcommand = GenericMessageSubcommand;
+class SpeedSubcommand extends GenericMessageSubcommand {
+    constructor(Index, Speed) {
+        super(Index);
         this.Speed = Speed;
     }
 }
 exports.SpeedSubcommand = SpeedSubcommand;
 class VibrateCmd extends ButtplugDeviceMessage {
-    constructor(Speeds, DeviceIndex = -1, Id = 1) {
+    constructor(Speeds, DeviceIndex = -1, Id = exports.DEFAULT_MESSAGE_ID) {
         super(DeviceIndex, Id);
         this.Speeds = Speeds;
         this.DeviceIndex = DeviceIndex;
         this.Id = Id;
     }
     get SchemaVersion() { return 1; }
+    static Create(aDeviceIndex, aSpeeds) {
+        const cmdList = new Array();
+        let i = 0;
+        for (const speed of aSpeeds) {
+            cmdList.push(new SpeedSubcommand(i, speed));
+            ++i;
+        }
+        return new VibrateCmd(cmdList, aDeviceIndex, exports.DEFAULT_MESSAGE_ID);
+    }
 }
 exports.VibrateCmd = VibrateCmd;
-class RotateSubcommand {
+class RotateSubcommand extends GenericMessageSubcommand {
     constructor(Index, Speed, Clockwise) {
-        this.Index = Index;
+        super(Index);
         this.Speed = Speed;
         this.Clockwise = Clockwise;
+    }
+    static Create(aDeviceIndex, aSpeeds) {
+        const cmdList = new Array();
+        let i = 0;
+        for (const speed of aSpeeds) {
+            cmdList.push(new SpeedSubcommand(i, speed));
+            ++i;
+        }
+        return new VibrateCmd(cmdList, aDeviceIndex);
     }
 }
 exports.RotateSubcommand = RotateSubcommand;
 class RotateCmd extends ButtplugDeviceMessage {
-    constructor(Rotations, DeviceIndex = -1, Id = 1) {
+    constructor(Rotations, DeviceIndex = -1, Id = exports.DEFAULT_MESSAGE_ID) {
         super(DeviceIndex, Id);
         this.Rotations = Rotations;
         this.DeviceIndex = DeviceIndex;
         this.Id = Id;
     }
     get SchemaVersion() { return 1; }
+    static Create(aDeviceIndex, aCommands) {
+        const cmdList = new Array();
+        let i = 0;
+        for (const cmd of aCommands) {
+            cmdList.push(new RotateSubcommand(i, cmd[0], cmd[1]));
+            ++i;
+        }
+        return new RotateCmd(cmdList, aDeviceIndex);
+    }
 }
 exports.RotateCmd = RotateCmd;
-class VectorSubcommand {
+class VectorSubcommand extends GenericMessageSubcommand {
     constructor(Index, Position, Duration) {
-        this.Index = Index;
+        super(Index);
         this.Position = Position;
         this.Duration = Duration;
     }
 }
 exports.VectorSubcommand = VectorSubcommand;
 class LinearCmd extends ButtplugDeviceMessage {
-    constructor(Vectors, DeviceIndex = -1, Id = 1) {
+    constructor(Vectors, DeviceIndex = -1, Id = exports.DEFAULT_MESSAGE_ID) {
         super(DeviceIndex, Id);
         this.Vectors = Vectors;
         this.DeviceIndex = DeviceIndex;
         this.Id = Id;
     }
     get SchemaVersion() { return 1; }
+    static Create(aDeviceIndex, aCommands) {
+        const cmdList = new Array();
+        let i = 0;
+        for (const cmd of aCommands) {
+            cmdList.push(new VectorSubcommand(i, cmd[0], cmd[1]));
+            ++i;
+        }
+        return new LinearCmd(cmdList, aDeviceIndex);
+    }
 }
 exports.LinearCmd = LinearCmd;
 class MessageAttributes {

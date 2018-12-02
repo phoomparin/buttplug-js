@@ -1,15 +1,13 @@
 /// <reference types="node" />
 import { ButtplugLogger } from "../core/Logging";
 import { EventEmitter } from "events";
-import { Device } from "../core/Device";
+import { ButtplugClientDevice } from "./ButtplugClientDevice";
 import { IButtplugConnector } from "./IButtplugConnector";
 import * as Messages from "../core/Messages";
 export declare class ButtplugClient extends EventEmitter {
     protected _pingTimer: NodeJS.Timer | null;
     protected _connector: IButtplugConnector | null;
-    protected _devices: Map<number, Device>;
-    protected _counter: number;
-    protected _waitingMsgs: Map<number, (val: Messages.ButtplugMessage) => void>;
+    protected _devices: Map<number, ButtplugClientDevice>;
     protected _clientName: string;
     protected _logger: ButtplugLogger;
     protected _isScanning: boolean;
@@ -17,7 +15,7 @@ export declare class ButtplugClient extends EventEmitter {
     constructor(aClientName?: string);
     readonly Connector: IButtplugConnector | null;
     readonly Connected: boolean;
-    readonly Devices: Device[];
+    readonly Devices: ButtplugClientDevice[];
     readonly IsScanning: boolean;
     ConnectWebsocket: (aAddress: string) => Promise<void>;
     ConnectLocal: () => Promise<void>;
@@ -27,7 +25,7 @@ export declare class ButtplugClient extends EventEmitter {
     StopScanning: () => Promise<void>;
     RequestLog: (aLogLevel: string) => Promise<void>;
     StopAllDevices: () => Promise<void>;
-    SendDeviceMessage(aDevice: Device, aDeviceMsg: Messages.ButtplugDeviceMessage): Promise<void>;
+    SendDeviceMessage(aDevice: ButtplugClientDevice, aDeviceMsg: Messages.ButtplugDeviceMessage): Promise<void>;
     ParseMessages: (aMsgs: Messages.ButtplugMessage[]) => void;
     protected DisconnectHandler: () => void;
     protected ParseMessagesInternal(aMsgs: Messages.ButtplugMessage[]): void;
@@ -37,4 +35,5 @@ export declare class ButtplugClient extends EventEmitter {
     protected SendMessage(aMsg: Messages.ButtplugMessage): Promise<Messages.ButtplugMessage>;
     protected CheckConnector(): void;
     protected SendMsgExpectOk: (aMsg: Messages.ButtplugMessage) => Promise<void>;
+    protected SendDeviceMessageClosure: (aDevice: ButtplugClientDevice, aMsg: Messages.ButtplugDeviceMessage) => Promise<void>;
 }

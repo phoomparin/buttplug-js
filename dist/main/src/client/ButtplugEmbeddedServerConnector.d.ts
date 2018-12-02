@@ -10,6 +10,6 @@ export declare class ButtplugEmbeddedServerConnector extends EventEmitter implem
     readonly Connected: boolean;
     Connect: () => Promise<void>;
     Disconnect: () => void;
-    Send: (aMsg: ButtplugMessage) => Promise<void>;
+    Send: (aMsg: ButtplugMessage) => Promise<ButtplugMessage>;
     private OnMessageReceived;
 }

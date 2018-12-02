@@ -11,14 +11,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const BluetoothDeviceInfo_1 = require("../BluetoothDeviceInfo");
 const ButtplugBluetoothDevice_1 = require("../ButtplugBluetoothDevice");
 const Messages = require("../../../core/Messages");
+const Exceptions_1 = require("../../../core/Exceptions");
 class VorzeA10Cyclone extends ButtplugBluetoothDevice_1.ButtplugBluetoothDevice {
     constructor(aDeviceImpl) {
         super(aDeviceImpl.Name === "CycSA" ? "Vorze A10 Cyclone" : "Vorze UFO SA", aDeviceImpl);
         this.IsCyclone = false;
         this.HandleRotateCmd = (aMsg) => __awaiter(this, void 0, void 0, function* () {
             if (aMsg.Rotations.length !== 1) {
-                return new Messages.Error(`Vorze A10 Cyclone devices require RotateCmd to have 1 rotation command,` +
-                    ` ${aMsg.Rotations.length} sent.`, Messages.ErrorClass.ERROR_DEVICE, aMsg.Id);
+                throw new Exceptions_1.ButtplugDeviceException(`Vorze A10 Cyclone devices require RotateCmd to have 1 rotation command,` +
+                    ` ${aMsg.Rotations.length} sent.`, aMsg.Id);
             }
             return yield this.HandleVorzeA10CycloneCmd(new Messages.VorzeA10CycloneCmd(aMsg.Rotations[0].Speed * 100, aMsg.Rotations[0].Clockwise, aMsg.DeviceIndex, aMsg.Id));
         });
@@ -31,9 +32,9 @@ class VorzeA10Cyclone extends ButtplugBluetoothDevice_1.ButtplugBluetoothDevice 
             return new Messages.Ok(aMsg.Id);
         });
         this.IsCyclone = aDeviceImpl.Name === "CycSA";
-        this.MsgFuncs.set(Messages.StopDeviceCmd.name, this.HandleStopDeviceCmd);
-        this.MsgFuncs.set(Messages.VorzeA10CycloneCmd.name, this.HandleVorzeA10CycloneCmd);
-        this.MsgFuncs.set(Messages.RotateCmd.name, this.HandleRotateCmd);
+        this.MsgFuncs.set(Messages.StopDeviceCmd, this.HandleStopDeviceCmd);
+        this.MsgFuncs.set(Messages.VorzeA10CycloneCmd, this.HandleVorzeA10CycloneCmd);
+        this.MsgFuncs.set(Messages.RotateCmd, this.HandleRotateCmd);
     }
     static CreateInstance(aDeviceImpl) {
         return __awaiter(this, void 0, void 0, function* () {

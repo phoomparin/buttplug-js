@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const events_1 = require("events");
-const Messages = require("./Messages");
 /**
  * Enumeration of log levels for LogMessage message types. Log levels must match
  * order and name specified in LogMessage portion of the Buttplug protocol spec.
@@ -109,15 +108,6 @@ class ButtplugLogger extends events_1.EventEmitter {
      */
     set MaximumEventLogLevel(aLogLevel) {
         this.maximumEventLogLevel = aLogLevel;
-    }
-    /**
-     * Log a message, then create a Error buttplug message with the log message.
-     * Used when an operation has errored out and status needs to be both logged
-     * and returned to the client as an Error Message type.
-     */
-    LogAndError(aMsg, aErrorClass, aMsgId) {
-        this.Error(aMsg);
-        return new Messages.Error(aMsg, aErrorClass, aMsgId);
     }
     /**
      * Log new message at Fatal level.

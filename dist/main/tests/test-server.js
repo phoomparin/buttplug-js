@@ -14,6 +14,7 @@ const Messages = require("../src/core/Messages");
 const index_1 = require("../src/index");
 const devtools_1 = require("../src/devtools");
 const utils_1 = require("./utils");
+const Exceptions_1 = require("../src/core/Exceptions");
 utils_1.SetupTestSuite();
 class TestOldClient extends index_1.ButtplugClient {
     constructor() {
@@ -21,11 +22,11 @@ class TestOldClient extends index_1.ButtplugClient {
         this.InitializeConnection = () => __awaiter(this, void 0, void 0, function* () {
             const msg = yield this.SendMessage(new Messages.RequestServerInfo(this._clientName, 0));
             switch (msg.getType()) {
-                case "ServerInfo": {
+                case Messages.ServerInfo: {
                     // TODO: maybe store server name, do something with message template version?
                     return true;
                 }
-                case "Error": {
+                case Messages.Error: {
                     this._connector.Disconnect();
                 }
             }
@@ -42,6 +43,9 @@ describe("Server Tests", () => __awaiter(this, void 0, void 0, function* () {
     beforeEach(() => __awaiter(this, void 0, void 0, function* () {
         bpServer = new ButtplugServer_1.ButtplugServer("Test Server", 0);
         bpServer.AddDeviceManager(new devtools_1.TestDeviceManager());
+    }));
+    it("Should throw connection error if message sent without connecting", () => __awaiter(this, void 0, void 0, function* () {
+        yield expect(bpServer.SendMessage(new Messages.SingleMotorVibrateCmd(50, 0))).rejects.toBeInstanceOf(Error);
     }));
     it("Should downgrade messages", () => __awaiter(this, void 0, void 0, function* () {
         const bpConnector = new ButtplugEmbeddedServerConnector_1.ButtplugEmbeddedServerConnector();
@@ -71,22 +75,10 @@ describe("Server Tests", () => __awaiter(this, void 0, void 0, function* () {
     it("Should clear all device managers when ClearDeviceManagers called", () => __awaiter(this, void 0, void 0, function* () {
         const bpConnector = new ButtplugEmbeddedServerConnector_1.ButtplugEmbeddedServerConnector();
         bpConnector.Server = bpServer;
+        bpServer.ClearDeviceManagers();
         const client = new index_1.ButtplugClient();
         yield client.Connect(bpConnector);
-        let res;
-        let rej;
-        const p = new Promise((resolve, reject) => { res = resolve; rej = reject; });
-        client.addListener("scanningfinished", (aMsgs) => {
-            try {
-                expect(client.Devices.length).toEqual(0);
-                res();
-            }
-            catch (e) {
-                rej(e);
-            }
-        });
-        yield client.StartScanning();
-        return p;
+        yield expect(client.StartScanning()).rejects.toBeInstanceOf(Exceptions_1.ButtplugDeviceException);
     }));
 }));
 //# sourceMappingURL=test-server.js.map

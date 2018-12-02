@@ -17,7 +17,7 @@ const WeVibe_1 = require("../src/server/bluetooth/devices/WeVibe");
 const FleshlightLaunch_1 = require("../src/server/bluetooth/devices/FleshlightLaunch");
 const VorzeA10Cyclone_1 = require("../src/server/bluetooth/devices/VorzeA10Cyclone");
 utils_1.SetupTestSuite();
-describe("WebBluetooth library tests", () => {
+describe("Bluetooth device tests", () => {
     let p;
     let res;
     let rej;
@@ -46,7 +46,7 @@ describe("WebBluetooth library tests", () => {
         yield expect(bp.SendDeviceMessage(bp.Devices[0], new index_1.VibrateCmd([new index_1.SpeedSubcommand(0, 1),
             new index_1.SpeedSubcommand(1, 1)])))
             .rejects
-            .toHaveProperty("ErrorCode", index_1.ErrorClass.ERROR_DEVICE);
+            .toBeInstanceOf(index_1.ButtplugDeviceException);
         yield bp.SendDeviceMessage(bp.Devices[0], new index_1.VibrateCmd([new index_1.SpeedSubcommand(0, 1)]));
         expect(mockBT.txChar.writeValue).toBeCalledWith(Buffer.from("Vibrate:20;"));
         yield bp.SendDeviceMessage(bp.Devices[0], new index_1.SingleMotorVibrateCmd(.5));
@@ -65,7 +65,7 @@ describe("WebBluetooth library tests", () => {
             new index_1.SpeedSubcommand(1, 1),
             new index_1.SpeedSubcommand(2, 1)])))
             .rejects
-            .toHaveProperty("ErrorCode", index_1.ErrorClass.ERROR_DEVICE);
+            .toBeInstanceOf(index_1.ButtplugDeviceException);
         yield bp.SendDeviceMessage(bp.Devices[0], new index_1.VibrateCmd([new index_1.SpeedSubcommand(0, 1), new index_1.SpeedSubcommand(1, .5)]));
         expect(mockBT.txChar.writeValue).toBeCalledWith(Buffer.from("Vibrate1:20;"));
         expect(mockBT.txChar.writeValue).toBeCalledWith(Buffer.from("Vibrate2:10;"));
@@ -86,7 +86,7 @@ describe("WebBluetooth library tests", () => {
         yield expect(bp.SendDeviceMessage(bp.Devices[0], new index_1.RotateCmd([new index_1.RotateSubcommand(0, 1, true),
             new index_1.RotateSubcommand(1, 1, true)])))
             .rejects
-            .toHaveProperty("ErrorCode", index_1.ErrorClass.ERROR_DEVICE);
+            .toBeInstanceOf(index_1.ButtplugDeviceException);
         yield bp.SendDeviceMessage(bp.Devices[0], new index_1.RotateCmd([new index_1.RotateSubcommand(0, 1, false)]));
         expect(mockBT.txChar.writeValue).toBeCalledWith(Buffer.from("Rotate:20;"));
         yield bp.SendDeviceMessage(bp.Devices[0], new index_1.RotateCmd([new index_1.RotateSubcommand(0, 0.5, true)]));
@@ -104,7 +104,7 @@ describe("WebBluetooth library tests", () => {
         yield expect(bp.SendDeviceMessage(bp.Devices[0], new index_1.VibrateCmd([new index_1.SpeedSubcommand(0, 1),
             new index_1.SpeedSubcommand(1, 1)])))
             .rejects
-            .toHaveProperty("ErrorCode", index_1.ErrorClass.ERROR_DEVICE);
+            .toBeInstanceOf(index_1.ButtplugDeviceException);
         yield bp.SendDeviceMessage(bp.Devices[0], new index_1.VibrateCmd([new index_1.SpeedSubcommand(0, 1)]));
         expect(mockBT.txChar.writeValue).toBeCalledWith(new Uint8Array([0x0f, 0x03, 0x00, 0xff, 0x00, 0x03, 0x00, 0x00]));
         yield bp.SendDeviceMessage(bp.Devices[0], new index_1.SingleMotorVibrateCmd(.5));
@@ -120,7 +120,7 @@ describe("WebBluetooth library tests", () => {
         yield expect(bp.SendDeviceMessage(bp.Devices[0], new index_1.LinearCmd([new index_1.VectorSubcommand(0, 1, 1),
             new index_1.VectorSubcommand(1, 1, 1)])))
             .rejects
-            .toHaveProperty("ErrorCode", index_1.ErrorClass.ERROR_DEVICE);
+            .toBeInstanceOf(index_1.ButtplugDeviceException);
         yield bp.SendDeviceMessage(bp.Devices[0], new index_1.FleshlightLaunchFW12Cmd(99, 99));
         expect(mockBT.txChar.writeValue).toBeCalledWith(new Uint8Array([99, 99]));
         // We should expect to be at position 99 here, so calculate time and
@@ -138,7 +138,7 @@ describe("WebBluetooth library tests", () => {
         yield expect(bp.SendDeviceMessage(bp.Devices[0], new index_1.RotateCmd([new index_1.RotateSubcommand(0, 1, true),
             new index_1.RotateSubcommand(1, 1, false)])))
             .rejects
-            .toHaveProperty("ErrorCode", index_1.ErrorClass.ERROR_DEVICE);
+            .toBeInstanceOf(index_1.ButtplugDeviceException);
         yield bp.SendDeviceMessage(bp.Devices[0], new index_1.RotateCmd([new index_1.RotateSubcommand(0, 1, true)]));
         expect(mockBT.txChar.writeValue).toBeCalledWith(new Uint8Array([0x01, 0x01, (100 | (0x80)) & 0xff]));
         yield bp.SendDeviceMessage(bp.Devices[0], new index_1.VorzeA10CycloneCmd(50, false));

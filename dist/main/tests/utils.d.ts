@@ -6,8 +6,7 @@ import { DeviceMock, CharacteristicMock, PrimaryServiceMock, GattMock } from "we
 export declare class BPTestClient extends ButtplugClient {
     constructor(ClientName: string);
     readonly PingTimer: NodeJS.Timer | null;
-    SendCheckedMessage(aMsg: Messages.ButtplugMessage): Promise<Messages.ButtplugMessage>;
-    SendUncheckedMessage(aMsg: Messages.ButtplugMessage): Promise<Messages.ButtplugMessage>;
+    SendMessage(aMsg: Messages.ButtplugMessage): Promise<Messages.ButtplugMessage>;
 }
 export declare function SetupLovenseTestDevice(mockBT: WebBluetoothMockObject, deviceLetter?: string): void;
 export declare function SetupTestSuite(): void;

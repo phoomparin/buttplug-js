@@ -13,16 +13,16 @@ const Client_1 = require("../src/client/Client");
 const utils_1 = require("./utils");
 const index_1 = require("../src/index");
 const Lovense_1 = require("../src/server/bluetooth/devices/Lovense");
+const Exceptions_1 = require("../src/core/Exceptions");
 utils_1.SetupTestSuite();
 describe("WebBluetooth library tests", () => {
     let p;
     let res;
-    let rej;
     let bp;
     let mockBT;
     let bluetooth;
     beforeEach(() => __awaiter(this, void 0, void 0, function* () {
-        p = new Promise((resolve, reject) => { res = resolve; rej = reject; });
+        p = new Promise((resolve) => { res = resolve; });
         // We assume we're using a lovense device for all tests here so set it up.
         mockBT = utils_1.MakeMockWebBluetoothDevice(Lovense_1.Lovense.DeviceInfo);
         utils_1.SetupLovenseTestDevice(mockBT);
@@ -57,7 +57,7 @@ describe("WebBluetooth library tests", () => {
     it("should stop scanning on requestdevice being cancelled", () => __awaiter(this, void 0, void 0, function* () {
         bp.on("scanningfinished", () => res());
         bluetooth.requestDevice = () => {
-            throw new Error("User cancelled");
+            throw new Exceptions_1.ButtplugDeviceException("User cancelled");
         };
         yield bp.StartScanning();
         return p;
@@ -65,10 +65,12 @@ describe("WebBluetooth library tests", () => {
     it("should stop scanning on device not opening", () => __awaiter(this, void 0, void 0, function* () {
         bp.on("scanningfinished", () => res());
         mockBT.gatt.connect = () => {
-            throw new Error("Connection error");
+            throw new Error("Injected connection error");
         };
         // Make sure we at least have the right error code. Id and message may vary.
-        yield expect(bp.StartScanning()).rejects.toHaveProperty("ErrorCode", index_1.ErrorClass.ERROR_DEVICE);
+        yield expect(bp.StartScanning())
+            .rejects
+            .toEqual(new Error("Cannot open device LVS-test: Error: Injected connection error"));
         return p;
     }));
     it("should subscribe on connect for lovense device, unsubscribe on disconnect", () => __awaiter(this, void 0, void 0, function* () {

@@ -20,10 +20,10 @@ class TestDevice extends index_1.ButtplugDevice {
         this._rotateSpeed = 0;
         this._rotateClockwise = false;
         this.HandleStopDeviceCmd = (aMsg) => __awaiter(this, void 0, void 0, function* () {
-            if (this.MsgFuncs.has(Messages.VibrateCmd.name)) {
+            if (this.MsgFuncs.has(Messages.VibrateCmd)) {
                 this.emit("vibrate", 0);
             }
-            else if (this.MsgFuncs.has(Messages.LinearCmd.name)) {
+            else if (this.MsgFuncs.has(Messages.LinearCmd)) {
                 this.emit("linear", { position: this._linearPosition,
                     speed: this._linearSpeed });
             }
@@ -69,17 +69,17 @@ class TestDevice extends index_1.ButtplugDevice {
             // everything kinda funnels to that.
             return yield this.HandleFleshlightLaunchFW12Cmd(new Messages.FleshlightLaunchFW12Cmd(speed, positionGoal, aMsg.DeviceIndex, aMsg.Id));
         });
-        this.MsgFuncs.set(Messages.StopDeviceCmd.name, this.HandleStopDeviceCmd);
+        this.MsgFuncs.set(Messages.StopDeviceCmd, this.HandleStopDeviceCmd);
         if (shouldVibrate) {
-            this.MsgFuncs.set(Messages.SingleMotorVibrateCmd.name, this.HandleSingleMotorVibrateCmd);
-            this.MsgFuncs.set(Messages.VibrateCmd.name, this.HandleVibrateCmd);
+            this.MsgFuncs.set(Messages.SingleMotorVibrateCmd, this.HandleSingleMotorVibrateCmd);
+            this.MsgFuncs.set(Messages.VibrateCmd, this.HandleVibrateCmd);
         }
         if (shouldLinear) {
-            this.MsgFuncs.set(Messages.FleshlightLaunchFW12Cmd.name, this.HandleFleshlightLaunchFW12Cmd);
-            this.MsgFuncs.set(Messages.LinearCmd.name, this.HandleLinearCmd);
+            this.MsgFuncs.set(Messages.FleshlightLaunchFW12Cmd, this.HandleFleshlightLaunchFW12Cmd);
+            this.MsgFuncs.set(Messages.LinearCmd, this.HandleLinearCmd);
         }
         if (shouldRotate) {
-            this.MsgFuncs.set(Messages.RotateCmd.name, this.HandleRotateCmd);
+            this.MsgFuncs.set(Messages.RotateCmd, this.HandleRotateCmd);
         }
     }
     get Connected() {
@@ -89,21 +89,21 @@ class TestDevice extends index_1.ButtplugDevice {
         this._connected = connected;
     }
     get MessageSpecifications() {
-        if (this.MsgFuncs.has(Messages.VibrateCmd.name)) {
+        if (this.MsgFuncs.has(Messages.VibrateCmd)) {
             return {
                 VibrateCmd: { FeatureCount: 2 },
                 SingleMotorVibrateCmd: {},
                 StopDeviceCmd: {},
             };
         }
-        else if (this.MsgFuncs.has(Messages.LinearCmd.name)) {
+        else if (this.MsgFuncs.has(Messages.LinearCmd)) {
             return {
                 LinearCmd: { FeatureCount: 1 },
                 FleshlightLaunchFW12Cmd: {},
                 StopDeviceCmd: {},
             };
         }
-        else if (this.MsgFuncs.has(Messages.RotateCmd.name)) {
+        else if (this.MsgFuncs.has(Messages.RotateCmd)) {
             return {
                 RotateCmd: { FeatureCount: 1 },
                 StopDeviceCmd: {},

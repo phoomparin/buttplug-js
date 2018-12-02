@@ -11,6 +11,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const BluetoothDeviceInfo_1 = require("../BluetoothDeviceInfo");
 const ButtplugBluetoothDevice_1 = require("../ButtplugBluetoothDevice");
 const Messages = require("../../../core/Messages");
+const Exceptions_1 = require("../../../core/Exceptions");
 class FleshlightLaunch extends ButtplugBluetoothDevice_1.ButtplugBluetoothDevice {
     constructor(aDeviceImpl) {
         super("Fleshlight Launch", aDeviceImpl);
@@ -28,7 +29,7 @@ class FleshlightLaunch extends ButtplugBluetoothDevice_1.ButtplugBluetoothDevice
         });
         this.HandleLinearCmd = (aMsg) => __awaiter(this, void 0, void 0, function* () {
             if (aMsg.Vectors.length !== 1) {
-                return new Messages.Error("LinearCmd requires 1 vector for this device.", Messages.ErrorClass.ERROR_DEVICE, aMsg.Id);
+                throw new Exceptions_1.ButtplugDeviceException("LinearCmd requires 1 vector for this device.", aMsg.Id);
             }
             // Move between 5/95, otherwise we'll allow the device to smack into hard
             // stops because of braindead firmware.
@@ -44,9 +45,9 @@ class FleshlightLaunch extends ButtplugBluetoothDevice_1.ButtplugBluetoothDevice
             // everything kinda funnels to that.
             return yield this.HandleFleshlightLaunchFW12Cmd(new Messages.FleshlightLaunchFW12Cmd(speed, positionGoal, aMsg.DeviceIndex, aMsg.Id));
         });
-        this.MsgFuncs.set(Messages.StopDeviceCmd.name, this.HandleStopDeviceCmd);
-        this.MsgFuncs.set(Messages.FleshlightLaunchFW12Cmd.name, this.HandleFleshlightLaunchFW12Cmd);
-        this.MsgFuncs.set(Messages.LinearCmd.name, this.HandleLinearCmd);
+        this.MsgFuncs.set(Messages.StopDeviceCmd, this.HandleStopDeviceCmd);
+        this.MsgFuncs.set(Messages.FleshlightLaunchFW12Cmd, this.HandleFleshlightLaunchFW12Cmd);
+        this.MsgFuncs.set(Messages.LinearCmd, this.HandleLinearCmd);
     }
     static CreateInstance(aDeviceImpl) {
         return __awaiter(this, void 0, void 0, function* () {

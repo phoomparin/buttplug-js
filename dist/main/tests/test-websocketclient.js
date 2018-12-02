@@ -13,6 +13,7 @@ const Client_1 = require("../src/client/Client");
 const Messages = require("../src/core/Messages");
 const MessageUtils_1 = require("../src/core/MessageUtils");
 const utils_1 = require("./utils");
+const src_1 = require("../src");
 utils_1.SetupTestSuite();
 describe("Websocket Client Tests", () => __awaiter(this, void 0, void 0, function* () {
     let mockServer;
@@ -33,10 +34,10 @@ describe("Websocket Client Tests", () => __awaiter(this, void 0, void 0, functio
         p = new Promise((resolve, reject) => { res = resolve; rej = reject; });
         const serverInfo = (jsonmsg) => {
             const msg = MessageUtils_1.FromJSON(jsonmsg)[0];
-            if (msg.Type === "RequestServerInfo") {
+            if (msg.Type === Messages.RequestServerInfo) {
                 delaySend(new Messages.ServerInfo(0, 0, 0, 1, 0, "Test Server", msg.Id));
             }
-            if (msg.Type === "RequestDeviceList") {
+            if (msg.Type === Messages.RequestDeviceList) {
                 delaySend(new Messages.DeviceList([], msg.Id));
                 mockServer.removeEventListener("message", serverInfo);
             }
@@ -63,6 +64,15 @@ describe("Websocket Client Tests", () => __awaiter(this, void 0, void 0, functio
         bp.addListener("disconnect", () => { res(); });
         mockServer.close();
         return p;
+    }));
+    it("Should throw exception on return of error message", () => __awaiter(this, void 0, void 0, function* () {
+        mockServer.on("message", (jsonmsg) => {
+            const msg = MessageUtils_1.FromJSON(jsonmsg)[0];
+            if (msg.Type === Messages.RequestLog) {
+                delaySend(new Messages.Error("Error", Messages.ErrorClass.ERROR_MSG, msg.Id));
+            }
+        });
+        yield expect(bp.RequestLog("Debug")).rejects.toBeInstanceOf(src_1.ButtplugMessageException);
     }));
 }));
 //# sourceMappingURL=test-websocketclient.js.map

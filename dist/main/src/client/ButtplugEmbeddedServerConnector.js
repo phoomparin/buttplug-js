@@ -10,19 +10,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const events_1 = require("events");
 const ButtplugServer_1 = require("../server/ButtplugServer");
+const ButtplugClientConnectorException_1 = require("./ButtplugClientConnectorException");
 class ButtplugEmbeddedServerConnector extends events_1.EventEmitter {
     constructor() {
         super(...arguments);
         this._connected = false;
         this._server = null;
-        this.Connect = () => __awaiter(this, void 0, void 0, function* () {
+        this.Connect = () => {
             this._connected = true;
             if (this._server === null) {
                 this._server = new ButtplugServer_1.ButtplugServer();
             }
             this._server.addListener("message", this.OnMessageReceived);
             return Promise.resolve();
-        });
+        };
         this.Disconnect = () => {
             if (!this._connected) {
                 return;
@@ -34,10 +35,9 @@ class ButtplugEmbeddedServerConnector extends events_1.EventEmitter {
         };
         this.Send = (aMsg) => __awaiter(this, void 0, void 0, function* () {
             if (!this._connected) {
-                throw new Error("ButtplugClient not connected");
+                return Promise.reject(new ButtplugClientConnectorException_1.ButtplugClientConnectorException("Client not connected."));
             }
-            const returnMsg = yield this._server.SendMessage(aMsg);
-            this.emit("message", [returnMsg]);
+            return yield this._server.SendMessage(aMsg);
         });
         this.OnMessageReceived = (aMsg) => {
             this.emit("message", [aMsg]);
