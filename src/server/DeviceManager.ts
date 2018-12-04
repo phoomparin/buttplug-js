@@ -11,16 +11,16 @@ export class DeviceManager extends EventEmitter {
   private _devices: Map<number, IButtplugDevice> = new Map<number, IButtplugDevice>();
   private _deviceCounter: number = 0;
   private _logger = ButtplugLogger.Logger;
-  private _msgClosure: (ButtplugMessage) => void;
+  private _msgClosure: (aMsg: Messages.ButtplugMessage) => void;
 
-  constructor(aMsgClosure: (ButtplugMessage) => void) {
+  constructor(aMsgClosure: (aMsg: Messages.ButtplugMessage) => void) {
     super();
     this._logger.Debug("DeviceManager: Starting Device Manager");
     // If we have a bluetooth object on navigator, load the device manager
     if (typeof(window) !== "undefined" &&
         typeof(window.navigator) !== "undefined" &&
         (navigator as any).bluetooth) {
-      this.AddDeviceManager(new WebBluetoothDeviceManager());
+      this.AddDeviceManager(new WebBluetoothDeviceManager(this._logger));
     } else {
       this._logger.Info("DeviceManager: Not adding WebBluetooth Manager, no WebBluetooth capabilities found.");
     }
@@ -44,6 +44,7 @@ export class DeviceManager extends EventEmitter {
 
   public AddDeviceManager = (aManager: IDeviceSubtypeManager) => {
     this._logger.Info(`DeviceManager: Adding Device Manager ${aManager.constructor.name}`);
+    aManager.SetLogger(this._logger);
     this._subtypeManagers.push(aManager);
     aManager.addListener("deviceadded", this.OnDeviceAdded);
     aManager.addListener("deviceremoved", this.OnDeviceRemoved);
