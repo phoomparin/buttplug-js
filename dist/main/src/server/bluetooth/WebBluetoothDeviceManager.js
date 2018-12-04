@@ -9,12 +9,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const Logging_1 = require("../../core/Logging");
+const Exceptions_1 = require("../../core/Exceptions");
 const BluetoothDevices_1 = require("./BluetoothDevices");
 const events_1 = require("events");
 const WebBluetoothDevice_1 = require("./WebBluetoothDevice");
 class WebBluetoothDeviceManager extends events_1.EventEmitter {
-    constructor() {
-        super(...arguments);
+    constructor(aLogger) {
+        super();
         this.OpenDevice = (aDevice) => __awaiter(this, void 0, void 0, function* () {
             if (aDevice === undefined) {
                 // TODO Throw here?
@@ -43,6 +44,10 @@ class WebBluetoothDeviceManager extends events_1.EventEmitter {
             const device = yield WebBluetoothDevice_1.WebBluetoothDevice.CreateDevice(deviceInfo, aDevice);
             this.emit("deviceadded", device);
         });
+        this.SetLogger(aLogger !== undefined ? aLogger : Logging_1.ButtplugLogger.Logger);
+    }
+    SetLogger(aLogger) {
+        this._logger = aLogger;
     }
     StartScanning() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -61,7 +66,7 @@ class WebBluetoothDeviceManager extends events_1.EventEmitter {
                 }
                 filters.optionalServices = [...filters.optionalServices, ...deviceInfo.Services];
             }
-            Logging_1.ButtplugLogger.Logger.Trace("Bluetooth filter set: " + filters);
+            this._logger.Trace("Bluetooth filter set: " + filters);
             // At some point, we should use navigator.bluetooth.getAvailability() to
             // check whether we have a radio to use. However, no browser currently
             // implements this. Instead, see if requestDevice throws;
@@ -77,15 +82,16 @@ class WebBluetoothDeviceManager extends events_1.EventEmitter {
                 if (e.message.indexOf("User cancelled") !== -1) {
                     return;
                 }
-                throw new Error("Bluetooth scanning interrupted. " +
-                    "Either user cancelled out of dialog, or bluetooth radio is not available. Exception: " + e);
+                throw Exceptions_1.ButtplugException.LogAndError(Exceptions_1.ButtplugDeviceException, this._logger, "Bluetooth scanning interrupted. " +
+                    "Either user cancelled out of dialog, " +
+                    "or bluetooth radio is not available. Exception: " + e);
             }
             try {
                 yield this.OpenDevice(device);
             }
             catch (e) {
                 this.emit("scanningfinished");
-                throw new Error(`Cannot open device ${device.name}: ${e}`);
+                throw Exceptions_1.ButtplugException.LogAndError(Exceptions_1.ButtplugDeviceException, this._logger, `Cannot open device ${device.name}: ${e}`);
             }
             this.emit("scanningfinished");
         });

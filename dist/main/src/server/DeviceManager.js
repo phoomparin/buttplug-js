@@ -31,6 +31,7 @@ class DeviceManager extends events_1.EventEmitter {
         };
         this.AddDeviceManager = (aManager) => {
             this._logger.Info(`DeviceManager: Adding Device Manager ${aManager.constructor.name}`);
+            aManager.SetLogger(this._logger);
             this._subtypeManagers.push(aManager);
             aManager.addListener("deviceadded", this.OnDeviceAdded);
             aManager.addListener("deviceremoved", this.OnDeviceRemoved);
@@ -146,7 +147,7 @@ class DeviceManager extends events_1.EventEmitter {
         if (typeof (window) !== "undefined" &&
             typeof (window.navigator) !== "undefined" &&
             navigator.bluetooth) {
-            this.AddDeviceManager(new WebBluetoothDeviceManager_1.WebBluetoothDeviceManager());
+            this.AddDeviceManager(new WebBluetoothDeviceManager_1.WebBluetoothDeviceManager(this._logger));
         }
         else {
             this._logger.Info("DeviceManager: Not adding WebBluetooth Manager, no WebBluetooth capabilities found.");
